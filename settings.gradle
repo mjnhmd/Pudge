@@ -1,2 +1,2 @@
 rootProject.name='Pudge'
-include ':app',':spellbook'
+include ':app'

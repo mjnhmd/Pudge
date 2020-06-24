@@ -2,7 +2,6 @@ package com.pudge
 
 import android.content.ContentValues
 import android.util.Log
-import com.gh0u1l5.wechatmagician.spellbook.interfaces.IDatabaseHook
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
@@ -10,7 +9,7 @@ import java.lang.Exception
 import java.nio.charset.Charset
 import java.util.*
 
-object Message: IDatabaseHook {
+object Message {
     val onInsertHooker = Hooker {
         XposedHelpers.findAndHookMethod(
             XposedInit.wxClassLoader!!.loadClass("com.tencent.wcdb.database.SQLiteDatabase"), "insertWithOnConflict",
