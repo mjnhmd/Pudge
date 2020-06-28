@@ -50,10 +50,10 @@ object Message {
             "openDatabase",  // 被HOOK对象的函数名
             String::class.java,  // 参数0：数据库全路径
             ByteArray::class.java,  // 参数1：用户名密码（一个加密后的7位值）
-            XposedInit.wxparam!!.classLoader.loadClass("com.tencent.wcdb.database.SQLiteCipherSpec"),  // 参数2：是一个SQLiteCipherSpec对象，该对象中包含了加密方式
-            XposedInit.wxparam!!.classLoader.loadClass("com.tencent.wcdb.database.SQLiteDatabase\$CursorFactory"),  // 参数3：某工厂对象
+            XposedInit.wxClassLoader!!.loadClass("com.tencent.wcdb.database.SQLiteCipherSpec"),  // 参数2：是一个SQLiteCipherSpec对象，该对象中包含了加密方式
+            XposedInit.wxClassLoader!!.loadClass("com.tencent.wcdb.database.SQLiteDatabase\$CursorFactory"),  // 参数3：某工厂对象
             Int::class.javaPrimitiveType,  // 参数4：Flags，未知标记
-            XposedInit.wxparam!!.classLoader.loadClass("com.tencent.wcdb.DatabaseErrorHandler"),  // 参数5：错误处理的句柄
+            XposedInit.wxClassLoader!!.loadClass("com.tencent.wcdb.DatabaseErrorHandler"),  // 参数5：错误处理的句柄
             Int::class.javaPrimitiveType,  // 参数6：加密方式的某个参数PoolSize
             object : XC_MethodHook() {
                 override fun beforeHookedMethod(param: MethodHookParam) {

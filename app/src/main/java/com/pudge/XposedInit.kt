@@ -41,10 +41,6 @@ class XposedInit : IXposedHookLoadPackage {
             t.stackTrace.forEach { message += (it.toString() + "\n") }
             XposedBridge.log("mjnmjnmjn Hook  error. $message")
         }
-//        if (SpellBook.isImportantWechatProcess(lpparam)){
-//            XposedBridge.log("Hello Wechat!")
-//            SpellBook.startup(lpparam, listOf(Alert, Message, MessageStorage))
-//        }
     }
 
     fun hook() {
