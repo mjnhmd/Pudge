@@ -2,6 +2,8 @@ package com.pudge
 
 import android.app.Application
 import android.content.Context
+import com.gh0u1l5.wechatmagician.spellbook.parser.ApkFile
+import com.gh0u1l5.wechatmagician.spellbook.parser.ClassTrie
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -33,7 +35,10 @@ class XposedInit : IXposedHookLoadPackage {
                 Context::class.java, object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         wxClassLoader = (param.args[0] as Context).classLoader
-                        hook()
+                        ApkFile(lpparam.appInfo.sourceDir).use {
+                            wxClasses = it.classTypes
+                            hook()
+                        }
                     }
                 })
         } catch (t: Throwable) {
@@ -49,6 +54,7 @@ class XposedInit : IXposedHookLoadPackage {
         Message.onInsertHooker.hook()
         Message.openDatabaseHooker.hook()
         Message.repeatHooker.hook()
+        Limits.provideStaticHookers()?.forEach { it.hook() }
     }
 
     companion object {
@@ -56,5 +62,6 @@ class XposedInit : IXposedHookLoadPackage {
         var wxparam: LoadPackageParam? = null
         var wxClassLoader: ClassLoader? = null
         var wxPacakgeName: String? = null
+        var wxClasses: ClassTrie? = null
     }
 }
