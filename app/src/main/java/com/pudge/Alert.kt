@@ -1,6 +1,7 @@
 package com.pudge
 
 import android.app.Activity
+import android.view.Menu
 import android.widget.Toast
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -25,6 +26,21 @@ object Alert{
                 Toast.makeText(activity, "Hello Wechat! resume", Toast.LENGTH_LONG).show()
             }
         })
+    }
+
+    val onCreateOptionsMenuHooker = Hooker {
+        XposedHelpers.findAndHookMethod(
+            "com,tencent.mm.ui.MMActivity",
+            XposedInit.wxClassLoader,
+            "onCreateOptionsMenu",
+            C.Menu,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val activity = param.thisObject as? Activity ?: return
+                    val menu = param.args[0] as? Menu ?: return
+
+                }
+            })
     }
 
 

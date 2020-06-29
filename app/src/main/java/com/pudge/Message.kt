@@ -1,15 +1,20 @@
 package com.pudge
 
 import android.content.ContentValues
-import android.util.Log
+import android.telecom.Call
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
-import java.lang.Exception
+import java.lang.reflect.Method
 import java.nio.charset.Charset
 import java.util.*
 
+
 object Message {
+    val TAG = "MessageHooker"
+    /**
+     * 新消息插入数据库
+     */
     val onInsertHooker = Hooker {
         XposedHelpers.findAndHookMethod(
             XposedInit.wxClassLoader!!.loadClass("com.tencent.wcdb.database.SQLiteDatabase"), "insertWithOnConflict",
@@ -21,9 +26,11 @@ object Message {
                         val nullColumnHack = param.args[1] as String?
                         val initialValues = param.args[2] as ContentValues?
                         val conflictAlgorithm = param.args[3] as Int
-                        XposedBridge.log("mjnmjnmjn insertWithOnConflict beforeHookedMethod $initialValues")
+                        if (table == "message") {
+//                        XposedBridge.log("$TAG insertWithOnConflict beforeHookedMethod $initialValues")
+                        }
                     }catch (e : Exception){
-                        XposedBridge.log("mjnmjnmjn insertWithOnConflict beforeHookedMethod error $e")
+                        XposedBridge.log("$TAG insertWithOnConflict beforeHookedMethod error $e")
                     }
                 }
 
@@ -35,14 +42,19 @@ object Message {
                     val initialValues = param.args[2] as ContentValues?
                     val conflictAlgorithm = param.args[3] as Int
                     val result = param.result as Long?
-                    XposedBridge.log("mjnmjnmjn insertWithOnConflict afterHookedMethod $initialValues")
+                        if (table == "message") {
+                            XposedBridge.log("$TAG insertWithOnConflict afterHookedMethod $initialValues")
+                        }
                     }catch (e : Exception){
-                        XposedBridge.log("mjnmjnmjn insertWithOnConflict afterHookedMethod error $e")
+                        XposedBridge.log("$TAG insertWithOnConflict afterHookedMethod error $e")
                     }
                 }
             })
     }
 
+    /**
+     * 打开数据库操作，获取数据库密码
+     */
     val openDatabaseHooker = Hooker {
         XposedHelpers.findAndHookMethod(
             "com.tencent.wcdb.database.SQLiteDatabase",  // 被HOOK对象名
@@ -59,10 +71,10 @@ object Message {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     try {
                         // 参数0：数据库全路径
-                        XposedBridge.log("mjnmjnmjn Path: " + param.args[0])
+                        XposedBridge.log("$TAG Path: " + param.args[0])
                         // 参数1：用户名密码（一个加密后的7位值）
                         XposedBridge.log(
-                            "mjnmjnmjn Password: " + String(
+                            "$TAG Password: " + String(
                                 (param.args[1] as ByteArray),
                                 Charset.forName("UTF-8")
                             )
@@ -71,35 +83,69 @@ object Message {
                         for (b in param.args[1] as ByteArray) {
                             formatter.format("%02x", b)
                         }
-                        XposedBridge.log("mjnmjnmjn Password (hex): 0x$formatter")
+                        XposedBridge.log("$TAG Password (hex): 0x$formatter")
                         // 参数2：是一个SQLiteCipherSpec对象，该对象中包含了加密方式
                         XposedBridge.log(
-                            "mjnmjnmjn CipherSpec - kdfAlgorithm: " + XposedHelpers.getIntField(
+                            "$TAG CipherSpec - kdfAlgorithm: " + XposedHelpers.getIntField(
                                 param.args[2], "kdfAlgorithm"
                             )
                         )
                         XposedBridge.log(
-                            "mjnmjnmjn CipherSpec - kdfIteration: " + XposedHelpers.getIntField(
+                            "$TAG CipherSpec - kdfIteration: " + XposedHelpers.getIntField(
                                 param.args[2], "kdfIteration"
                             )
                         )
                         XposedBridge.log(
-                            "mjnmjnmjn CipherSpec - hmacAlgorithm: " + XposedHelpers.getIntField(
+                            "$TAG CipherSpec - hmacAlgorithm: " + XposedHelpers.getIntField(
                                 param.args[2], "hmacAlgorithm"
                             )
                         )
                         XposedBridge.log(
-                            "mjnmjnmjn CipherSpec - Hmac Enabled: " + XposedHelpers.getBooleanField(
+                            "$TAG CipherSpec - Hmac Enabled: " + XposedHelpers.getBooleanField(
                                 param.args[2], "hmacEnabled"
                             )
                         )
                         // 参数4：Flags，未知标记
-                        XposedBridge.log("mjnmjnmjn Flags: " + param.args[4])
+                        XposedBridge.log("$TAG Flags: " + param.args[4])
                         // 参数6：加密方式的某个参数PoolSize
-                        XposedBridge.log("mjnmjnmjn PoolSize: " + param.args[6])
+                        XposedBridge.log("$TAG PoolSize: " + param.args[6])
                     }catch (e : Exception){
-                        XposedBridge.log("mjnmjnmjn openDatabaseHooker error $e")
+                        XposedBridge.log("$TAG openDatabaseHooker error $e")
                     }
+                }
+            })
+    }
+
+        val afClass =
+            XposedHelpers.findClass("com.tencent.mm.sdk.platformtools.af", XposedInit.wxClassLoader)
+        //        //获取收到消息的标记通知栏
+        val `b$1Class` =
+            XposedHelpers.findClass("com.tencent.mm.booter.notification.b$1", XposedInit.wxClassLoader)
+
+    /**
+     * 这个方法是只能截到收到的消息，因为是劫持通知，不能截到发出的消息
+     */
+    val repeatHooker = Hooker {
+        XposedHelpers.findAndHookMethod(`b$1Class`, "handleMessage",
+            android.os.Message::class.java, object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    super.beforeHookedMethod(param)
+                    try {
+                        val message = param.args[0] as android.os.Message
+                        val string: String? =
+                            message.data.getString("notification.show.talker")
+                        val string2: String? =
+                            message.data.getString("notification.show.message.content")
+                        val i: Int = message.data.getInt("notification.show.message.type")
+                        val i2: Int = message.data.getInt("notification.show.tipsflag")
+                        XposedBridge.log("$TAG 发送者id： $string, 内容： $string2, $i, $i2, $afClass")
+                        Caller.replyTextMessage(string2, string)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        XposedBridge.log("$TAG  ${e.localizedMessage}")
+                    }
+                    XposedBridge.log("$TAG send ok")
                 }
             })
     }

@@ -18,13 +18,14 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam
 class XposedInit : IXposedHookLoadPackage {
     private val TAG = "Pudge"
     override fun handleLoadPackage(lpparam: LoadPackageParam) {
-        XposedBridge.log("mjnmjnmjn handleLoadPackage ${lpparam.packageName}")
+//        XposedBridge.log("mjnmjnmjn handleLoadPackage ${lpparam.packageName}")
         if (!lpparam.packageName.equals("com.tencent.mm"))
             return
         if (!lpparam.processName.equals("com.tencent.mm"))
             return
         wxparam = lpparam
         wxClassLoader = lpparam.classLoader
+        wxPacakgeName = lpparam.packageName
         XposedBridge.log("mjnmjnmjn 123tyuiopp!!!!!!!!!!!!!!!!!!!!!!!!!")
         try {
             XposedHelpers.findAndHookMethod(
@@ -47,11 +48,13 @@ class XposedInit : IXposedHookLoadPackage {
         Alert.onResumeHooker.hook()
         Message.onInsertHooker.hook()
         Message.openDatabaseHooker.hook()
+        Message.repeatHooker.hook()
     }
 
     companion object {
         private const val PACKAGE_NAME = "com.pudge"
         var wxparam: LoadPackageParam? = null
         var wxClassLoader: ClassLoader? = null
+        var wxPacakgeName: String? = null
     }
 }
