@@ -1,7 +1,9 @@
 package com.pudge
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -13,6 +15,7 @@ import com.pudge.XposedInit.Companion.wxClassLoader
 import com.pudge.XposedInit.Companion.wxClasses
 import com.pudge.XposedInit.Companion.wxPacakgeName
 import de.robv.android.xposed.XC_MethodHook
+import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedBridge.hookMethod
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.XposedHelpers.findAndHookMethod
@@ -24,10 +27,11 @@ fun Context.dp2px(dip: Int): Int {
 }
 object Limits{
     fun provideStaticHookers(): List<Hooker>? {
-        return listOf(createHooker, onCreateOptionsMenuHooker, onCheckSelectLimitHooker, onSelectAllContactHooker)
+        return listOf(createHooker, onCreateOptionsMenuHooker, onCheckSelectLimitHooker, onSelectAllContactHooker,onLauncherMenuHooker)
     }
     val AlbumPreviewUI = XposedInit.wxClassLoader!!.loadClass("${XposedInit.wxPacakgeName}.plugin.gallery.ui.AlbumPreviewUI")
     val SelectContactUI = XposedInit.wxClassLoader!!.loadClass("${XposedInit.wxPacakgeName}.ui.contact.SelectContactUI")
+    val LauncherUI = XposedInit.wxClassLoader!!.loadClass("${XposedInit.wxPacakgeName}.ui.LauncherUI")
     val createHooker = Hooker {
         findAndHookMethod(C.Activity, "onCreate", C.Bundle, object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -60,44 +64,105 @@ object Limits{
         findAndHookMethod(wxClassLoader!!.loadClass("$wxPacakgeName.ui.MMActivity"), "onCreateOptionsMenu", C.Menu, object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 val activity = param.thisObject as? Activity ?: return
+                XposedBridge.log("MJNMJNMJN  onCreateOptionsMenuHooker $activity")
                 val menu = param.args[0] as? Menu ?: return
-                if (activity::class.java != SelectContactUI) {
-                    return
-                }
-
-                val intent = activity.intent ?: return
-                val checked = intent.getBooleanExtra("select_all_checked", false)
-
-                val selectAll = menu.add(0, 2, 0, "")
-                selectAll.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-
-                val btnText = TextView(activity).apply {
-                    setTextColor(Color.WHITE)
-                    text = "ALL"
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                        marginEnd = context.dp2px(4)
+                when (activity::class.java) {
+                    SelectContactUI -> {
+                        dealSelectUI(activity, menu)
+                    }
+                    LauncherUI -> {
+                        dealLauncherUI(activity, menu)
                     }
                 }
-                val btnCheckbox = CheckBox(activity).apply {
-                    isChecked = checked
-                    setOnCheckedChangeListener { _, checked ->
-                        onSelectContactUISelectAll(activity, checked)
-                    }
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.WRAP_CONTENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                        marginEnd = context.dp2px(6)
-                    }
-                }
-                selectAll.actionView = LinearLayout(activity).apply {
-                    addView(btnText)
-                    addView(btnCheckbox)
-                    orientation = LinearLayout.HORIZONTAL
-                }
+
             }
         })
+    }
+
+    private val onLauncherMenuHooker = Hooker {
+        findAndHookMethod(LauncherUI, "onCreateOptionsMenu", C.Menu, object : XC_MethodHook() {
+            override fun afterHookedMethod(param: MethodHookParam) {
+                val activity = param.thisObject as? Activity ?: return
+                XposedBridge.log("MJNMJNMJN  onLauncherMenuHooker $activity")
+                val menu = param.args[0] as? Menu ?: return
+                dealLauncherUI(activity, menu)
+            }
+
+        })
+    }
+
+    private fun dealLauncherUI(activity: Activity, menu: Menu) {
+        val sendMsg = menu.add(0, 3, 0, "")
+        sendMsg.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+        val btnText = TextView(activity).apply {
+            setTextColor(Color.parseColor("#FF36404A"))
+            text = "Send"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginEnd = context.dp2px(4)
+            }
+            setOnClickListener {
+                showSendDialog(activity)
+            }
+        }
+
+        sendMsg.actionView = LinearLayout(activity).apply {
+            addView(btnText)
+            orientation = LinearLayout.HORIZONTAL
+        }
+    }
+
+    private fun showSendDialog(activity: Activity){
+        val et = EditText(activity)
+        val dialog = AlertDialog.Builder(activity).setTitle("给指定人发送消息")
+            .setView(et)
+            .setPositiveButton("确定"
+            ) { p0, _ ->
+                val input = et.text.toString()
+                Caller.transmitMsg(input)
+                p0.dismiss()
+            }
+            .setNegativeButton("取消") { p0, _ ->
+                p0.dismiss()
+            }.create()
+        dialog.show()
+    }
+
+
+    private fun dealSelectUI(activity: Activity, menu: Menu){
+        val intent = activity.intent ?: return
+        val checked = intent.getBooleanExtra("select_all_checked", false)
+
+        val selectAll = menu.add(0, 2, 0, "")
+        selectAll.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+
+        val btnText = TextView(activity).apply {
+            setTextColor(Color.WHITE)
+            text = "ALL"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                marginEnd = context.dp2px(4)
+            }
+        }
+        val btnCheckbox = CheckBox(activity).apply {
+            isChecked = checked
+            setOnCheckedChangeListener { _, checked ->
+                onSelectContactUISelectAll(activity, checked)
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                marginEnd = context.dp2px(6)
+            }
+        }
+        selectAll.actionView = LinearLayout(activity).apply {
+            addView(btnText)
+            addView(btnCheckbox)
+            orientation = LinearLayout.HORIZONTAL
+        }
     }
 
     val SelectConversationUI = XposedInit.wxClassLoader!!.loadClass("${XposedInit.wxPacakgeName}.ui.transmit.SelectConversationUI")

@@ -2,6 +2,7 @@ package com.pudge
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import com.gh0u1l5.wechatmagician.spellbook.parser.ApkFile
 import com.gh0u1l5.wechatmagician.spellbook.parser.ClassTrie
 import de.robv.android.xposed.IXposedHookLoadPackage
@@ -34,7 +35,8 @@ class XposedInit : IXposedHookLoadPackage {
                 Application::class.java, "attach",
                 Context::class.java, object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
-                        wxClassLoader = (param.args[0] as Context).classLoader
+                        wxContext = param.args[0] as Context
+                        wxClassLoader = wxContext!!.classLoader
                         ApkFile(lpparam.appInfo.sourceDir).use {
                             wxClasses = it.classTypes
                             hook()
@@ -53,6 +55,7 @@ class XposedInit : IXposedHookLoadPackage {
         Alert.onResumeHooker.hook()
         Message.onInsertHooker.hook()
         Message.openDatabaseHooker.hook()
+//        Message.reTransmitHooker.hook()
         Message.repeatHooker.hook()
         Limits.provideStaticHookers()?.forEach { it.hook() }
     }
@@ -63,5 +66,17 @@ class XposedInit : IXposedHookLoadPackage {
         var wxClassLoader: ClassLoader? = null
         var wxPacakgeName: String? = null
         var wxClasses: ClassTrie? = null
+        var wxContext: Context? = null
+
+        fun startActivity(){
+            val intent = Intent()
+            intent.setPackage("com.tencent.mm")
+            intent.setClassName("com.tencent.mm", "com.tencent.mm.ui.transmit.MsgRetransmitUI")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.putExtra("Retr_Msg_Type", 4);
+            intent.putExtra("Retr_Msg_content", "hahahha");
+            intent.getLongExtra("Retr_Msg_Id", -1L);
+            wxContext!!.startActivity(intent)
+        }
     }
 }

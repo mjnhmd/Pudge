@@ -1,5 +1,6 @@
 package com.pudge
 
+import android.content.Intent
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import de.robv.android.xposed.callbacks.XC_LoadPackage
@@ -62,6 +63,26 @@ object Caller {
         //调用发消息方法
             XposedBridge.invokeOriginalMethod(methodA, objectdpP, objectParamiVar)
             XposedBridge.log("$TAG  invokeOriginalMethod()执行成功")
+        } catch (e: Exception) {
+            XposedBridge.log("$TAG  调用微信消息回复方法异常")
+            XposedBridge.log(e)
+        }
+    }
+
+    fun transmitMsg(strContent: String?) {
+        XposedBridge.log("$TAG  准备转发消息内容：content:$strContent")
+        if (strContent == null || strContent.isEmpty()) {
+            return
+        }
+        try {
+            val intent = Intent()
+            intent.setPackage("com.tencent.mm")
+            intent.setClassName("com.tencent.mm", "com.tencent.mm.ui.transmit.MsgRetransmitUI")
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.putExtra("Retr_Msg_Type", 4);
+            intent.putExtra("Retr_Msg_content", strContent);
+            intent.getLongExtra("Retr_Msg_Id", -1L);
+            XposedInit.wxContext!!.startActivity(intent)
         } catch (e: Exception) {
             XposedBridge.log("$TAG  调用微信消息回复方法异常")
             XposedBridge.log(e)

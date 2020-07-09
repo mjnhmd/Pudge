@@ -1,6 +1,7 @@
 package com.pudge
 
 import android.content.ContentValues
+import android.content.Intent
 import android.telecom.Call
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -140,7 +141,8 @@ object Message {
                         val i: Int = message.data.getInt("notification.show.message.type")
                         val i2: Int = message.data.getInt("notification.show.tipsflag")
                         XposedBridge.log("$TAG 发送者id： $string, 内容： $string2, $i, $i2, $afClass")
-                        Caller.replyTextMessage(string2, string)
+//                        Caller.replyTextMessage(string2, string)
+                        Caller.transmitMsg(string2)
                     } catch (e: Exception) {
                         e.printStackTrace()
                         XposedBridge.log("$TAG  ${e.localizedMessage}")
@@ -148,6 +150,28 @@ object Message {
                     XposedBridge.log("$TAG send ok")
                 }
             })
+    }
+
+
+    val reTransmitHooker = Hooker {
+        XposedHelpers.findAndHookMethod("com.tencent.mm.ui.transmit.MsgRetransmitUI", XposedInit.wxClassLoader, "getIntent", object : XC_MethodHook(){
+            override fun afterHookedMethod(param: MethodHookParam?) {
+                super.afterHookedMethod(param)
+                try {
+                    val intent = param?.result as Intent
+                    val msgType = intent.getIntExtra("Retr_Msg_Type", -1);
+                    val msgContent = intent.getStringExtra("Retr_Msg_content");
+                    val msgId = intent.getLongExtra("Retr_Msg_Id", -1L);
+                    val fileName = intent.getStringExtra("Retr_File_Name");
+                    val fileList = intent.getStringArrayListExtra("Retr_File_Path_List")
+                    XposedBridge.log("MJNMJNMJN reTransmitHooker msgType =$msgType,  msgContent = $msgContent   msgId = $msgId ")
+                } catch (e : Exception){
+                    e.printStackTrace()
+                    XposedBridge.log("MJNMJNMJN  ${e.localizedMessage}")
+                }
+
+            }
+        })
     }
 
 }
