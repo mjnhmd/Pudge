@@ -1,7 +1,7 @@
 package com.gh0u1l5.wechatmagician.spellbook.parser
 
 
-import com.pudge.ParallelUtil.parallelForEach
+import com.pudge.common.ParallelUtil.parallelForEach
 import java.io.Closeable
 import java.io.File
 import java.nio.ByteBuffer

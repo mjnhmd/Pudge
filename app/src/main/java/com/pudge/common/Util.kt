@@ -1,13 +1,10 @@
-package com.pudge
+package com.pudge.common
 
 import android.util.Log
-import com.pudge.Caller.TAG
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
-import de.robv.android.xposed.XposedHelpers.findMethodExactIfExists
 import java.lang.reflect.Field
 import java.lang.reflect.Method
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 object Util {
@@ -43,7 +40,13 @@ object Util {
      * 查找一个确定的方法, 如果不存在返回 null
      */
     @JvmStatic fun findMethodExactIfExists(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method? =
-        try { findMethodExact(clazz, methodName, *parameterTypes) } catch (_: Throwable) { null }
+        try {
+            findMethodExact(
+                clazz,
+                methodName,
+                *parameterTypes
+            )
+        } catch (_: Throwable) { null }
 
     /**
      * 根据 JVM Specification 生成一个参数签名
@@ -60,7 +63,9 @@ object Util {
      * @param parameterTypes 该方法的参数类型
      */
     @JvmStatic fun findMethodExact(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method {
-        val fullMethodName = "${clazz.name}#$methodName${getParametersString(*parameterTypes)}#exact"
+        val fullMethodName = "${clazz.name}#$methodName${getParametersString(
+            *parameterTypes
+        )}#exact"
         try {
             return clazz.getDeclaredMethod(methodName, *parameterTypes).apply {
                 isAccessible = true

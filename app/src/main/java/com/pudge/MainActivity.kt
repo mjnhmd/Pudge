@@ -1,16 +1,8 @@
 package com.pudge
 
-import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Toast
-import com.pudge.ReflectionUtil.findClassesFromPackage
-import com.pudge.XposedInit.Companion.wxClassLoader
-import com.pudge.XposedInit.Companion.wxClasses
-import com.pudge.XposedInit.Companion.wxPacakgeName
-import de.robv.android.xposed.IXposedHookLoadPackage
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {

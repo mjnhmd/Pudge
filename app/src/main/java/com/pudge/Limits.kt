@@ -1,19 +1,20 @@
 package com.pudge
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.*
-import com.pudge.ReflectionUtil.findClassesFromPackage
+import com.pudge.common.ReflectionUtil.findClassesFromPackage
 import com.pudge.XposedInit.Companion.wxClassLoader
 import com.pudge.XposedInit.Companion.wxClasses
 import com.pudge.XposedInit.Companion.wxPacakgeName
+import com.pudge.common.C
+import com.pudge.common.Hooker
+import com.pudge.common.Util
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedBridge.hookMethod
@@ -25,9 +26,13 @@ fun Context.dp2px(dip: Int): Int {
     val scale = resources.displayMetrics.density
     return (dip * scale + 0.5f).toInt()
 }
+
+/**
+ * 修改个数限制，包括图片数量和人数
+ */
 object Limits{
     fun provideStaticHookers(): List<Hooker>? {
-        return listOf(createHooker, onCreateOptionsMenuHooker, onCheckSelectLimitHooker, onSelectAllContactHooker,onLauncherMenuHooker)
+        return listOf(createHooker, onCreateOptionsMenuHooker, onCheckSelectLimitHooker, onSelectAllContactHooker)
     }
     val AlbumPreviewUI = XposedInit.wxClassLoader!!.loadClass("${XposedInit.wxPacakgeName}.plugin.gallery.ui.AlbumPreviewUI")
     val SelectContactUI = XposedInit.wxClassLoader!!.loadClass("${XposedInit.wxPacakgeName}.ui.contact.SelectContactUI")
@@ -61,73 +66,23 @@ object Limits{
 
 
     private val onCreateOptionsMenuHooker = Hooker {
-        findAndHookMethod(wxClassLoader!!.loadClass("$wxPacakgeName.ui.MMActivity"), "onCreateOptionsMenu", C.Menu, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val activity = param.thisObject as? Activity ?: return
-                XposedBridge.log("MJNMJNMJN  onCreateOptionsMenuHooker $activity")
-                val menu = param.args[0] as? Menu ?: return
-                when (activity::class.java) {
-                    SelectContactUI -> {
-                        dealSelectUI(activity, menu)
+        findAndHookMethod(
+            wxClassLoader!!.loadClass("$wxPacakgeName.ui.MMActivity"),
+            "onCreateOptionsMenu",
+            C.Menu,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val activity = param.thisObject as? Activity ?: return
+                    XposedBridge.log("MJNMJNMJN  onCreateOptionsMenuHooker $activity")
+                    val menu = param.args[0] as? Menu ?: return
+                    when (activity::class.java) {
+                        SelectContactUI -> {
+                            dealSelectUI(activity, menu)
+                        }
                     }
-                    LauncherUI -> {
-                        dealLauncherUI(activity, menu)
-                    }
+
                 }
-
-            }
-        })
-    }
-
-    private val onLauncherMenuHooker = Hooker {
-        findAndHookMethod(LauncherUI, "onCreateOptionsMenu", C.Menu, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val activity = param.thisObject as? Activity ?: return
-                XposedBridge.log("MJNMJNMJN  onLauncherMenuHooker $activity")
-                val menu = param.args[0] as? Menu ?: return
-                dealLauncherUI(activity, menu)
-            }
-
-        })
-    }
-
-    private fun dealLauncherUI(activity: Activity, menu: Menu) {
-        val sendMsg = menu.add(0, 3, 0, "")
-        sendMsg.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-        val btnText = TextView(activity).apply {
-            setTextColor(Color.parseColor("#FF36404A"))
-            text = "Send"
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply {
-                marginEnd = context.dp2px(4)
-            }
-            setOnClickListener {
-                showSendDialog(activity)
-            }
-        }
-
-        sendMsg.actionView = LinearLayout(activity).apply {
-            addView(btnText)
-            orientation = LinearLayout.HORIZONTAL
-        }
-    }
-
-    private fun showSendDialog(activity: Activity){
-        val et = EditText(activity)
-        val dialog = AlertDialog.Builder(activity).setTitle("给指定人发送消息")
-            .setView(et)
-            .setPositiveButton("确定"
-            ) { p0, _ ->
-                val input = et.text.toString()
-                Caller.transmitMsg(input)
-                p0.dismiss()
-            }
-            .setNegativeButton("取消") { p0, _ ->
-                p0.dismiss()
-            }.create()
-        dialog.show()
+            })
     }
 
 
@@ -181,22 +136,22 @@ object Limits{
     // Hook SelectContactUI to help the "Select All" button.
     private val onSelectAllContactHooker = Hooker {
         findAndHookMethod(
-                SelectContactUI, "onActivityResult",
-                C.Int, C.Int, C.Intent, object : XC_MethodHook() {
-            @Throws(Throwable::class)
-            override fun beforeHookedMethod(param: MethodHookParam) {
-                val requestCode = param.args[0] as Int
-                val resultCode = param.args[1] as Int
-                val data = param.args[2] as Intent?
+            SelectContactUI, "onActivityResult",
+            C.Int, C.Int, C.Intent, object : XC_MethodHook() {
+                @Throws(Throwable::class)
+                override fun beforeHookedMethod(param: MethodHookParam) {
+                    val requestCode = param.args[0] as Int
+                    val resultCode = param.args[1] as Int
+                    val data = param.args[2] as Intent?
 
-                if (requestCode == 5) {
-                    val activity = param.thisObject as Activity
-                    activity.setResult(resultCode, data)
-                    activity.finish()
-                    param.result = null
+                    if (requestCode == 5) {
+                        val activity = param.thisObject as Activity
+                        activity.setResult(resultCode, data)
+                        activity.finish()
+                        param.result = null
+                    }
                 }
-            }
-        })
+            })
     }
     val ContactInfo = findClassesFromPackage(wxClassLoader!!, wxClasses!!, "$wxPacakgeName.storage")
         .filterByMethod(C.String, "getCityCode")

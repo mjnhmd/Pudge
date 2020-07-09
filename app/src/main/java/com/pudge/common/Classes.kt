@@ -1,9 +1,9 @@
-package com.pudge
+package com.pudge.common
 
 import android.util.Log
-import com.pudge.Util.findFieldsWithType
-import com.pudge.Util.findMethodExactIfExists
-import com.pudge.Util.findMethodsByExactParameters
+import com.pudge.common.Util.findFieldsWithType
+import com.pudge.common.Util.findMethodExactIfExists
+import com.pudge.common.Util.findMethodsByExactParameters
 import de.robv.android.xposed.XposedHelpers.findFieldIfExists
 
 /**
@@ -18,19 +18,27 @@ class Classes(private val classes: List<Class<*>>) {
     }
     
     fun filterBySuper(superClass: Class<*>?): Classes {
-        return Classes(classes.filter { it.superclass == superClass }.also {
-            if (it.isEmpty()) {
-                Log.w(TAG, "filterBySuper found nothing, super class = ${superClass?.simpleName}")
-            }
-        })
+        return Classes(classes.filter { it.superclass == superClass }
+            .also {
+                if (it.isEmpty()) {
+                    Log.w(
+                        TAG,
+                        "filterBySuper found nothing, super class = ${superClass?.simpleName}"
+                    )
+                }
+            })
     }
 
     fun filterByEnclosingClass(enclosingClass: Class<*>?): Classes {
-        return Classes(classes.filter { it.enclosingClass == enclosingClass }.also {
-            if (it.isEmpty()) {
-                Log.w(TAG, "filterByEnclosingClass found nothing, enclosing class = ${enclosingClass?.simpleName} ")
-            }
-        })
+        return Classes(classes.filter { it.enclosingClass == enclosingClass }
+            .also {
+                if (it.isEmpty()) {
+                    Log.w(
+                        TAG,
+                        "filterByEnclosingClass found nothing, enclosing class = ${enclosingClass?.simpleName} "
+                    )
+                }
+            })
     }
 
     fun filterByMethod(returnType: Class<*>?, methodName: String, vararg parameterTypes: Class<*>): Classes {
@@ -39,7 +47,12 @@ class Classes(private val classes: List<Class<*>>) {
             method != null && method.returnType == returnType ?: method.returnType
         }.also {
             if (it.isEmpty()) {
-                Log.w(TAG, "filterByMethod found nothing, returnType = ${returnType?.simpleName}, methodName = $methodName, parameterTypes = ${parameterTypes.joinToString("|") { it.simpleName }}")
+                Log.w(
+                    TAG,
+                    "filterByMethod found nothing, returnType = ${returnType?.simpleName}, methodName = $methodName, parameterTypes = ${parameterTypes.joinToString(
+                        "|"
+                    ) { it.simpleName }}"
+                )
             }
         })
     }
@@ -49,7 +62,12 @@ class Classes(private val classes: List<Class<*>>) {
             findMethodsByExactParameters(clazz, returnType, *parameterTypes).isNotEmpty()
         }.also {
             if (it.isEmpty()) {
-                Log.w(TAG, "filterByMethod found nothing, returnType = ${returnType?.simpleName}, parameterTypes = ${parameterTypes.joinToString("|") { it.simpleName }}")
+                Log.w(
+                    TAG,
+                    "filterByMethod found nothing, returnType = ${returnType?.simpleName}, parameterTypes = ${parameterTypes.joinToString(
+                        "|"
+                    ) { it.simpleName }}"
+                )
             }
         })
     }
@@ -60,7 +78,10 @@ class Classes(private val classes: List<Class<*>>) {
             field != null && field.type.canonicalName == fieldType
         }.also {
             if (it.isEmpty()) {
-                Log.w(TAG, "filterByField found nothing, fieldName = $fieldName, fieldType = $fieldType")
+                Log.w(
+                    TAG,
+                    "filterByField found nothing, fieldName = $fieldName, fieldType = $fieldType"
+                )
             }
         })
     }
@@ -70,7 +91,10 @@ class Classes(private val classes: List<Class<*>>) {
             findFieldsWithType(clazz, fieldType).isNotEmpty()
         }.also {
             if (it.isEmpty()) {
-                Log.w(TAG, "filterByField found nothing, fieldType = $fieldType")
+                Log.w(
+                    TAG,
+                    "filterByField found nothing, fieldType = $fieldType"
+                )
             }
         })
     }

@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package com.pudge
+package com.pudge.common
 
 /**
  * C.(class name) 是 (class name)::class.java 的缩写形式

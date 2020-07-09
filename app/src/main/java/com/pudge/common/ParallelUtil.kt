@@ -1,6 +1,6 @@
-package com.pudge
+package com.pudge.common
 
-import com.pudge.Util.tryVerbosely
+import com.pudge.common.Util.tryVerbosely
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit

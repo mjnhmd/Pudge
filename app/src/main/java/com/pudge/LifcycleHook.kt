@@ -2,13 +2,14 @@ package com.pudge
 
 import android.app.Activity
 import android.view.Menu
-import android.view.View
 import android.widget.Toast
+import com.pudge.common.C
+import com.pudge.common.Hooker
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 
-object Alert{
+object LifcycleHook{
     val onStartHooker = Hooker {
         XposedHelpers.findAndHookMethod(C.Activity, "onStart", object : XC_MethodHook() {
             override fun beforeHookedMethod(param: MethodHookParam) {
@@ -24,7 +25,7 @@ object Alert{
             override fun beforeHookedMethod(param: MethodHookParam) {
                 val activity = param.thisObject as? Activity ?: return
                 activity.intent
-                if (activity.localClassName.contains("MsgRetransmitUI")){
+                if (activity.localClassName.contains("MsgRetransmitUI")) {
                     val intent = activity.intent
                     val msgType = intent.getIntExtra("Retr_Msg_Type", -1);
                     val msgContent = intent.getStringExtra("Retr_Msg_content");

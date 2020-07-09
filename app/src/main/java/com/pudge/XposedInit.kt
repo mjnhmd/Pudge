@@ -52,11 +52,11 @@ class XposedInit : IXposedHookLoadPackage {
     }
 
     fun hook() {
-        Alert.onResumeHooker.hook()
+        LifcycleHook.onResumeHooker.hook()
         Message.onInsertHooker.hook()
         Message.openDatabaseHooker.hook()
-//        Message.reTransmitHooker.hook()
         Message.repeatHooker.hook()
+        SendMessage.provideStaticHookers()?.forEach{ it.hook()}
         Limits.provideStaticHookers()?.forEach { it.hook() }
     }
 

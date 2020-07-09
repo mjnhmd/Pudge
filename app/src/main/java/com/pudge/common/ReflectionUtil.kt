@@ -1,4 +1,4 @@
-package com.pudge
+package com.pudge.common
 
 import com.gh0u1l5.wechatmagician.spellbook.parser.ApkFile
 import com.gh0u1l5.wechatmagician.spellbook.parser.ClassTrie
@@ -73,9 +73,10 @@ object ReflectionUtil {
         if (cached != null) {
             return cached
         }
-        val classes = Classes(trie.search(packageName, depth).mapNotNull {name ->
-            findClassIfExists(name, loader)
-        })
+        val classes = Classes(
+            trie.search(packageName, depth).mapNotNull { name ->
+                findClassIfExists(name, loader)
+            })
         return classes.also { classCache[key] = classes }
     }
 
@@ -83,7 +84,13 @@ object ReflectionUtil {
      * 查找一个确定的方法, 如果不存在返回 null
      */
     @JvmStatic fun findMethodExactIfExists(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method? =
-            try { findMethodExact(clazz, methodName, *parameterTypes) } catch (_: Throwable) { null }
+            try {
+                findMethodExact(
+                    clazz,
+                    methodName,
+                    *parameterTypes
+                )
+            } catch (_: Throwable) { null }
 
     /**
      * 根据 JVM Specification 生成一个参数签名
@@ -99,7 +106,9 @@ object ReflectionUtil {
      * @param parameterTypes 该方法的参数类型
      */
     @JvmStatic fun findMethodExact(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method {
-        val fullMethodName = "${clazz.name}#$methodName${getParametersString(*parameterTypes)}#exact"
+        val fullMethodName = "${clazz.name}#$methodName${getParametersString(
+            *parameterTypes
+        )}#exact"
         if (fullMethodName in methodCache) {
             return methodCache[fullMethodName] ?: throw NoSuchMethodError(fullMethodName)
         }

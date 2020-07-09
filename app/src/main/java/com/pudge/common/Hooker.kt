@@ -1,4 +1,4 @@
-package com.pudge
+package com.pudge.common
 
 /**
  * 将一次 Hook 操作封装成对象, 防止对同样的函数反复下钩, 造成难以调查的BUG
