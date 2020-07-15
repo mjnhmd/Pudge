@@ -37,7 +37,7 @@ class PrefProvider : ContentProvider() {
     override fun getType(uri: Uri): String? = null
 
     override fun insert(uri: Uri, values: ContentValues?): Uri? {
-        throw UnsupportedOperationException("Wechat Magician PrefProvider: Cannot modify read-only preferences!")
+        throw UnsupportedOperationException("Wechat Pudge PrefProvider: Cannot modify read-only preferences!")
     }
 
     override fun query(
@@ -88,10 +88,10 @@ class PrefProvider : ContentProvider() {
         selection: String?,
         selectionArgs: Array<out String>?
     ): Int {
-        throw UnsupportedOperationException("Wechat Magician PrefProvider: Cannot modify read-only preferences!")
+        throw UnsupportedOperationException("Wechat Pudge PrefProvider: Cannot modify read-only preferences!")
     }
 
     override fun delete(p0: Uri, selection: String?, selectionArgs: Array<out String>?): Int {
-        throw UnsupportedOperationException("Wechat Magician PrefProvider: Cannot modify read-only preferences!")
+        throw UnsupportedOperationException("Wechat Pudge PrefProvider: Cannot modify read-only preferences!")
     }
 }
