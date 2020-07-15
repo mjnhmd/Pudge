@@ -1,5 +1,7 @@
 package com.pudge
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
@@ -87,6 +89,45 @@ object Caller {
             XposedBridge.log("$TAG  调用微信消息回复方法异常")
             XposedBridge.log(e)
         }
+    }
+
+
+
+    fun postSNS(activity: Context){
+        val intent = Intent(activity, SendMessage.SnsUploadUI)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .putExtra("Ksnsforward", true)
+            .putExtra("Ksnsupload_type", 9)
+            .putExtra("Kdescription", "test 朋友圈 ")
+//            when {
+//                snsInfo?.contentUrl != null -> {
+//                    val buffer = FileUtil.readBytesFromDisk("$storage/.cache/0.thumb")
+//                    intent.putExtra("Ksnsupload_type", 1)
+//                        .putExtra("Ksnsupload_title", snsInfo.title)
+//                        .putExtra("Ksnsupload_link", snsInfo.contentUrl)
+//                        .putExtra("Ksnsupload_imgbuf", buffer)
+//                }
+//                snsInfo?.medias?.isEmpty() == false -> {
+//                    when (snsInfo.medias[0].type) {
+//                        "2" -> {
+//                            intent.putStringArrayListExtra(
+//                                "sns_kemdia_path_list",
+//                                ArrayList((0 until snsInfo.medias.size).map {
+//                                    "$storage/.cache/$it"
+//                                })
+//                            )
+//                            intent.removeExtra("Ksnsupload_type")
+//                        }
+//                        "6" -> {
+//                            intent.putExtra("Ksnsupload_type", 14)
+//                                .putExtra("sight_md5", snsInfo.medias[0].main?.md5)
+//                                .putExtra("KSightPath", "$storage/.cache/0")
+//                                .putExtra("KSightThumbPath", "$storage/.cache/0.thumb")
+//                        }
+//                    }
+//                }
+//            }
+        activity.startActivity(intent)
     }
 
 }

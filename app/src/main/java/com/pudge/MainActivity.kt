@@ -1,9 +1,15 @@
 package com.pudge
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import com.pudge.common.Global
+import com.pudge.common.Global.SETTINGS_SECRET_FRIEND
+import com.pudge.common.Util.putExtra
 import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -12,55 +18,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         textview.text = "Pudge"
         layoutInflater.inflate(R.layout.view_demo, null)
-        button.text = "发朋友圈"
-        button.setOnClickListener(object : View.OnClickListener{
-            override fun onClick(p0: View?) {
-                TODO("Not yet implemented")
-            }
-
-        })
+        button.text = "打开微信"
         button.setOnClickListener {
-//            val SnsUploadUI = findClassesFromPackage(wxClassLoader!!, wxClasses!!, "$wxPacakgeName.plugin.sns.ui")
-//                    .filterByField("$wxPacakgeName.plugin.sns.ui.LocationWidget")
-//                    .filterByField("$wxPacakgeName.plugin.sns.ui.SnsUploadSayFooter")
-//                    .firstOrNull()
+            val intent = Intent()
+            val cmp: ComponentName = ComponentName("com.tencent.mm", "com.tencent.mm.ui.LauncherUI")
+            intent.action = Intent.ACTION_MAIN
+            intent.addCategory(Intent.CATEGORY_LAUNCHER)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.component = cmp
+            startActivity(intent)
+        }
 
-            XposedInit.startActivity()
-//            val intent = Intent()
-//            intent.setClassName("com.tencent.mm", "com.plugin.sns.ui.SNSUploadUI")
-//                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                .putExtra("Ksnsforward", true)
-//                .putExtra("Ksnsupload_type", 9)
-//                .putExtra("Kdescription", "test 朋友圈 ")
-//            when {
-//                snsInfo?.contentUrl != null -> {
-//                    val buffer = FileUtil.readBytesFromDisk("$storage/.cache/0.thumb")
-//                    intent.putExtra("Ksnsupload_type", 1)
-//                        .putExtra("Ksnsupload_title", snsInfo.title)
-//                        .putExtra("Ksnsupload_link", snsInfo.contentUrl)
-//                        .putExtra("Ksnsupload_imgbuf", buffer)
-//                }
-//                snsInfo?.medias?.isEmpty() == false -> {
-//                    when (snsInfo.medias[0].type) {
-//                        "2" -> {
-//                            intent.putStringArrayListExtra(
-//                                "sns_kemdia_path_list",
-//                                ArrayList((0 until snsInfo.medias.size).map {
-//                                    "$storage/.cache/$it"
-//                                })
-//                            )
-//                            intent.removeExtra("Ksnsupload_type")
-//                        }
-//                        "6" -> {
-//                            intent.putExtra("Ksnsupload_type", 14)
-//                                .putExtra("sight_md5", snsInfo.medias[0].main?.md5)
-//                                .putExtra("KSightPath", "$storage/.cache/0")
-//                                .putExtra("KSightThumbPath", "$storage/.cache/0.thumb")
-//                        }
-//                    }
-//                }
-//            }
-//            context.get()?.startActivity(intent)
+        pref_btn.setOnClickListener {
+            sendBroadcast(Intent(Global.ACTION_UPDATE_PREF).apply {
+                putExtra("key", SETTINGS_SECRET_FRIEND)
+                putExtra("value", ratingBar.numStars)
+            })
         }
     }
 }

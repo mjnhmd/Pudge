@@ -1,9 +1,11 @@
 package com.pudge
 
 import android.app.Activity
+import android.telecom.Call
 import android.view.Menu
 import android.widget.Toast
 import com.pudge.common.C
+import com.pudge.common.Global.SETTINGS_SECRET_FRIEND
 import com.pudge.common.Hooker
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -34,8 +36,17 @@ object LifcycleHook{
                     val fileList = intent.getStringArrayListExtra("Retr_File_Path_List")
                     XposedBridge.log("MJNMJNMJN MsgRetransmitUI msgType =$msgType,  msgContent = $msgContent   msgId = $msgId ")
                 }
+                if (activity.localClassName.contains("LauncherUI")) {
+                    val pref = XposedInit.settings.getInt(SETTINGS_SECRET_FRIEND, -1)
+                    XposedBridge.log("MJNMJN preff: ${pref}")
+                    if (pref > 0 ){
+                        Caller.postSNS(XposedInit.wxContext!!)
+                        XposedInit.settings.putValue(SETTINGS_SECRET_FRIEND, -1)
+                    }
+                }
+
                 XposedBridge.log("MJNMJN onActivityResuming: ${activity.localClassName}")
-                Toast.makeText(activity, "Hello Wechat! resume", Toast.LENGTH_LONG).show()
+                Toast.makeText(activity, "${activity.localClassName} resume", Toast.LENGTH_LONG).show()
             }
         })
     }

@@ -2,14 +2,21 @@ package com.pudge
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Color
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.pudge.Caller.postSNS
+import com.pudge.XposedInit.Companion.wxClasses
+import com.pudge.XposedInit.Companion.wxPacakgeName
 import com.pudge.common.C
 import com.pudge.common.Hooker
+import com.pudge.common.ReflectionUtil.findClassesFromPackage
+import com.pudge.common.Util
+import com.pudge.common.Util.wxLazy
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
@@ -52,12 +59,31 @@ object SendMessage {
                 marginEnd = context.dp2px(4)
             }
             setOnClickListener {
-                showSendDialog(activity)
+                postSNS(activity)
+            }
+        }
+        val sendSns = menu.add(0, 4, 0, "")
+        val btnText2 = TextView(activity).apply {
+            setTextColor(Color.parseColor("#FF36404A"))
+            text = "朋友圈"
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                marginEnd = context.dp2px(4)
+            }
+            setOnClickListener {
+                postSNS(activity)
             }
         }
 
         sendMsg.actionView = LinearLayout(activity).apply {
             addView(btnText)
+            orientation = LinearLayout.HORIZONTAL
+        }
+
+        sendSns.actionView = LinearLayout(activity).apply {
+            addView(btnText2)
             orientation = LinearLayout.HORIZONTAL
         }
     }
@@ -77,4 +103,14 @@ object SendMessage {
             }.create()
         dialog.show()
     }
+
+
+    val SnsUploadUI: Class<*> by wxLazy("SnsUploadUI") {
+        findClassesFromPackage(XposedInit.wxClassLoader!!, wxClasses!!, "${XposedInit.wxPacakgeName}.plugin.sns.ui")
+            .filterByField("$wxPacakgeName.plugin.sns.ui.LocationWidget")
+            .filterByField("$wxPacakgeName.plugin.sns.ui.SnsUploadSayFooter")
+            .firstOrNull()
+    }
+
+
 }

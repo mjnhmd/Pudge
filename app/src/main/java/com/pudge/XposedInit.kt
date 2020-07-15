@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import com.gh0u1l5.wechatmagician.spellbook.parser.ApkFile
 import com.gh0u1l5.wechatmagician.spellbook.parser.ClassTrie
+import com.pudge.common.Global.PREFERENCE_NAME_SETTINGS
+import com.pudge.preference.Preferences
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
@@ -37,6 +39,8 @@ class XposedInit : IXposedHookLoadPackage {
                     override fun afterHookedMethod(param: MethodHookParam) {
                         wxContext = param.args[0] as Context
                         wxClassLoader = wxContext!!.classLoader
+                        settings.listen(wxContext!!)
+                        settings.load(wxContext!!)
                         ApkFile(lpparam.appInfo.sourceDir).use {
                             wxClasses = it.classTypes
                             hook()
@@ -67,7 +71,7 @@ class XposedInit : IXposedHookLoadPackage {
         var wxPacakgeName: String? = null
         var wxClasses: ClassTrie? = null
         var wxContext: Context? = null
-
+        val settings = Preferences(PREFERENCE_NAME_SETTINGS)
         fun startActivity(){
             val intent = Intent()
             intent.setPackage("com.tencent.mm")
